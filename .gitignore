@@ -1,0 +1,18 @@
+# Arquivos locais de trabalho
+.superpowers/
+superpowers/
+AGENTS.md
+agents.md
+.agents/
+.codex/
+.claude/
+CLAUDE.md
+GEMINI.md
+docs/
+
+# Python e ambiente local
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.pytest_cache/

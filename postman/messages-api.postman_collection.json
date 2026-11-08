@@ -1,0 +1,312 @@
+{
+  "info": {
+    "name": "Messages API - FastAPI",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Execute com main.py servido pelo Uvicorn, na ordem numerada. O POST captura automaticamente mensagemId; a colecao remove apenas a mensagem que criou. Os casos 404 e 422 sao testes de erro esperados."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "mensagemId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Hello World em JSON",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Mensagem inicial\", () => pm.expect(pm.response.json().mensagem).to.eql(\"Hello World!\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Listar mensagens",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/mensagens"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Lista JSON\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Criar mensagem",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/mensagens",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"texto\": \"Ola, Postman!\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status HTTP 201\", () => pm.response.to.have.status(201));",
+              "pm.test(\"Recurso criado\", () => { const dado = pm.response.json(); pm.expect(dado.id).to.be.a(\"number\"); pm.expect(dado.texto).to.eql(\"Ola, Postman!\"); pm.collectionVariables.set(\"mensagemId\", dado.id); });",
+              "pm.test(\"Location identifica o recurso\", () => pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/api/mensagens/\" + pm.response.json().id));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Consultar mensagem criada",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/mensagens/{{mensagemId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Mensagem salva\", () => { pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"mensagemId\"))); pm.expect(pm.response.json().texto).to.eql(\"Ola, Postman!\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Alterar mensagem",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/mensagens/{{mensagemId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"texto\": \"Mensagem atualizada!\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Mensagem alterada\", () => pm.expect(pm.response.json().texto).to.eql(\"Mensagem atualizada!\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Confirmar alteracao",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/mensagens/{{mensagemId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Alteracao persistiu\", () => pm.expect(pm.response.json().texto).to.eql(\"Mensagem atualizada!\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Excluir mensagem",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/mensagens/{{mensagemId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status HTTP 204\", () => pm.response.to.have.status(204));",
+              "pm.test(\"Corpo vazio\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Confirmar exclusao",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/mensagens/{{mensagemId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status HTTP 404\", () => pm.response.to.have.status(404));",
+              "pm.test(\"Detalhe do erro\", () => pm.expect(pm.response.json().detail).to.be.a(\"string\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Rejeitar texto vazio",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/mensagens",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"texto\": \"\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status HTTP 422\", () => pm.response.to.have.status(422));",
+              "pm.test(\"Detalhe do erro\", () => pm.expect(pm.response.json().detail).to.be.a(\"array\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Rejeitar formato diferente de JSON",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/plain"
+          }
+        ],
+        "url": "{{baseUrl}}/api/mensagens",
+        "body": {
+          "mode": "raw",
+          "raw": "Ola!",
+          "options": {
+            "raw": {
+              "language": "text"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status HTTP 422\", () => pm.response.to.have.status(422));",
+              "pm.test(\"Detalhe do erro\", () => pm.expect(pm.response.json().detail).to.be.a(\"array\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - Rejeitar JSON malformado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/mensagens",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"texto\":",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status HTTP 422\", () => pm.response.to.have.status(422));",
+              "pm.test(\"Detalhe do erro\", () => pm.expect(pm.response.json().detail).to.be.a(\"array\"));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
